@@ -85,6 +85,12 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 
 	sc := &speechpb.SpeechContext{Phrases: speechContext}
 
+	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
+                EnableSpeakerDiarization: true,
+                MinSpeakerCount:          2,
+                MaxSpeakerCount:          2,
+        }
+
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
@@ -95,8 +101,11 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					Model:           domainModel,
 					UseEnhanced:     g.enhancedMode,
 					SpeechContexts:  []*speechpb.SpeechContext{sc},
+					DiarizationConfig: diarizationConfig,
+					EnableAutomaticPunctuation: true,
 				},
 				InterimResults: true,
+				SingleUtterance: false,
 			},
 		},
 	}); err != nil {
@@ -189,8 +198,9 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 				}
 
 				for _, result := range resp.Results {
-					googleResultStream <- GoogleResult{Result: result}
+					googleResultStream <- GoogleResult{Result: resp.results}
 				}
+
 			}
 		}
 	}()
@@ -224,16 +234,18 @@ func (g *GoogleService) ReinitializeClient() error {
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
-				Config: &speechpb.RecognitionConfig{
-					Encoding:                   speechpb.RecognitionConfig_LINEAR16,
-					SampleRateHertz:            sampleRate,
-					LanguageCode:               g.languageCode,
-					Model:                      domainModel,
-					UseEnhanced:                g.enhancedMode,
-					SpeechContexts:             []*speechpb.SpeechContext{sc},
-					EnableAutomaticPunctuation: true,
-				},
-				InterimResults: true,
+                                Config: &speechpb.RecognitionConfig{
+                                        Encoding:        speechpb.RecognitionConfig_LINEAR16,
+                                        SampleRateHertz: sampleRate,
+                                        LanguageCode:    g.languageCode,
+                                        Model:           domainModel,
+                                        UseEnhanced:     g.enhancedMode,
+                                        SpeechContexts:  []*speechpb.SpeechContext{sc},
+                                        DiarizationConfig: diarizationConfig,
+                                        EnableAutomaticPunctuation: true,
+                                },
+                                InterimResults: true,
+                                SingleUtterance: false,
 			},
 		},
 	}); err != nil {
@@ -245,5 +257,5 @@ func (g *GoogleService) ReinitializeClient() error {
 
 // supportedEnhancedMode returns a list of supported language code for enhanced mode.
 func supportedEnhancedMode() []string {
-	return []string{"es-US", "en-GB", "en-US", "fr-FR", "ja-JP", "pt-BR", "ru-RU"}
+	return []string{"es-US", "en-GB", "en-US", "fr-FR", "ja-JP", "pt-BR", "ru-RU", "es-ES"}
 }
