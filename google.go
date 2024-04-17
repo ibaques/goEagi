@@ -198,7 +198,7 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 				}
 
 				for _, result := range resp.Results {
-					googleResultStream <- GoogleResult{Result: resp.results}
+					googleResultStream <- GoogleResult{Result: result}
 				}
 
 			}
@@ -230,7 +230,13 @@ func (g *GoogleService) ReinitializeClient() error {
 	}
 
 	sc := &speechpb.SpeechContext{Phrases: g.speechContext}
-
+	
+	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
+                EnableSpeakerDiarization: true,
+                MinSpeakerCount:          2,
+                MaxSpeakerCount:          2,
+        }
+	
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
