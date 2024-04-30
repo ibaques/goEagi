@@ -15,6 +15,7 @@ import (
 
 	speech "cloud.google.com/go/speech/apiv1"
 	speechpb "cloud.google.com/go/speech/apiv1/speechpb"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -104,7 +105,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					DiarizationConfig: diarizationConfig,
 					EnableAutomaticPunctuation: true,
 					EnableWordTimeOffsets: true,
-					EnableSpokenPunctuation: true,
+					EnableSpokenPunctuation: wrapperspb.Bool(true),
 				},
 				InterimResults: true,
 				SingleUtterance: false,
@@ -253,7 +254,7 @@ func (g *GoogleService) ReinitializeClient() error {
                                         DiarizationConfig: diarizationConfig,
                                         EnableAutomaticPunctuation: true,
 					EnableWordTimeOffsets: true,
-					EnableSpokenPunctuation: true,
+					EnableSpokenPunctuation: wrapperspb.Bool(true),
                                 },
                                 InterimResults: true,
                                 SingleUtterance: false,
