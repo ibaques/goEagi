@@ -105,7 +105,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					EnableAutomaticPunctuation: true,
 				},
 				InterimResults: true,
-				SingleUtterance: false,
+				SingleUtterance: true,
 			},
 		},
 	}); err != nil {
@@ -251,7 +251,7 @@ func (g *GoogleService) ReinitializeClient() error {
                                         EnableAutomaticPunctuation: true,
                                 },
                                 InterimResults: true,
-                                SingleUtterance: false,
+                                SingleUtterance: true,
 			},
 		},
 	}); err != nil {
