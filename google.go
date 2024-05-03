@@ -28,7 +28,7 @@ const (
 // GoogleResult is a struct that contains transcription result from Google Speech to Text service.
 type GoogleResult struct {
 	Result            *speechpb.StreamingRecognitionResult
-	SpeechEventType   *speechpb.StreamingRecognizeResponse_SpeechEventType
+	SpeechEventType   speechpb.StreamingRecognizeResponse_SpeechEventType
 	Error             error
 	Reinitialized     bool
 	ReinitializedInfo string
