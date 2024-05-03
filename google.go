@@ -28,6 +28,7 @@ const (
 // GoogleResult is a struct that contains transcription result from Google Speech to Text service.
 type GoogleResult struct {
 	Result            *speechpb.StreamingRecognitionResult
+	SpeechEventType   *speechpb.StreamingRecognitionResponse
 	Error             error
 	Reinitialized     bool
 	ReinitializedInfo string
@@ -107,7 +108,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					EnableWordTimeOffsets: true,
 					EnableSpokenPunctuation: wrapperspb.Bool(true),
 				},
-				InterimResults: true,
+				InterimResults: false,
 				SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
 			},
@@ -256,7 +257,7 @@ func (g *GoogleService) ReinitializeClient() error {
 					EnableWordTimeOffsets: true,
 					EnableSpokenPunctuation: wrapperspb.Bool(true),
                                 },
-                                InterimResults: true,
+                                InterimResults: false,
                                 SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
 			},
