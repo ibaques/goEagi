@@ -108,7 +108,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					EnableWordTimeOffsets: true,
 					EnableSpokenPunctuation: wrapperspb.Bool(true),
 				},
-				InterimResults: false,
+				InterimResults: true,
 				SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
 			},
@@ -202,11 +202,11 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 					return
 				}
 
+				googleResultStream <- GoogleResult{SpeechEventType: string(resp.SpeechEventType)}
+				
 				for _, result := range resp.Results {
 					googleResultStream <- GoogleResult{Result: result}
-				}
-
-				googleResultStream <- GoogleResult{SpeechEventType: string(resp.SpeechEventType)}
+				}			
 			}
 		}
 	}()
@@ -258,7 +258,7 @@ func (g *GoogleService) ReinitializeClient() error {
 					EnableWordTimeOffsets: true,
 					EnableSpokenPunctuation: wrapperspb.Bool(true),
                                 },
-                                InterimResults: false,
+                                InterimResults: true,
                                 SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
 			},
