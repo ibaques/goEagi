@@ -206,7 +206,7 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 					googleResultStream <- GoogleResult{Result: result}
 				}
 
-				googleResultStream <- GoogleResult{SpeechEventType: resp.SpeechEventType}
+				googleResultStream <- GoogleResult{SpeechEventType: string(resp.SpeechEventType)}
 			}
 		}
 	}()
