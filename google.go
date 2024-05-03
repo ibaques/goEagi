@@ -27,8 +27,7 @@ const (
 
 // GoogleResult is a struct that contains transcription result from Google Speech to Text service.
 type GoogleResult struct {
-	Result            *speechpb.StreamingRecognitionResult
-	SpeechEventType	  string
+	Result            *speechpb.StreamingRecognitionResult	
 	Error             error
 	Reinitialized     bool
 	ReinitializedInfo string
@@ -201,8 +200,6 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 					googleResultStream <- GoogleResult{Error: fmt.Errorf("cannot stream results: %v", err)}
 					return
 				}
-
-				googleResultStream <- GoogleResult{SpeechEventType: string(resp.SpeechEventType)}
 				
 				for _, result := range resp.Results {
 					googleResultStream <- GoogleResult{Result: result}
