@@ -20,7 +20,7 @@ import (
 
 const (
 	sampleRate  = 8000
-	domainModel = "phone_call"
+	domainModel = "telephony"
 
 	reinitializationTimeout = 4*time.Minute + 50*time.Second
 )
