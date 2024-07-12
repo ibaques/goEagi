@@ -14,7 +14,7 @@ import (
 	"time"
 	
 	speech "cloud.google.com/go/speech/apiv2"
-	speechpb "google.golang.org/genproto/googleapis/cloud/speech/v2"
+	"cloud.google.com/go/speech/apiv2/speechpb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
