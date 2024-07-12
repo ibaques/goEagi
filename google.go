@@ -12,9 +12,9 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	speech "cloud.google.com/go/speech/apiv1"
-	speechpb "cloud.google.com/go/speech/apiv1/speechpb"
+	
+	speech "cloud.google.com/go/speech/apiv2"
+	speechpb "google.golang.org/genproto/googleapis/cloud/speech/v2"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -95,10 +95,14 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
-				Config: &speechpb.RecognitionConfig{
-					Encoding:        speechpb.RecognitionConfig_LINEAR16,
-					SampleRateHertz: sampleRate,
-					LanguageCode:    g.languageCode,
+				Config: &speechpb.RecognitionConfig{					
+					DecodingConfig: &speechpb.RecognitionConfig_ExplicitDecodingConfig{
+						ExplicitDecodingConfig: &speechpb.ExplicitDecodingConfig{
+							Encoding:          speechpb.ExplicitDecodingConfig_LINEAR16,
+							SampleRateHertz:   sampleRate,
+							AudioChannelCount: 1,
+						},
+					},					
 					Model:           domainModel,
 					UseEnhanced:     g.enhancedMode,
 					SpeechContexts:  []*speechpb.SpeechContext{sc},
@@ -242,8 +246,13 @@ func (g *GoogleService) ReinitializeClient() error {
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
                                 Config: &speechpb.RecognitionConfig{
-                                        Encoding:        speechpb.RecognitionConfig_LINEAR16,
-                                        SampleRateHertz: sampleRate,
+ 					DecodingConfig: &speechpb.RecognitionConfig_ExplicitDecodingConfig{
+						ExplicitDecodingConfig: &speechpb.ExplicitDecodingConfig{
+							Encoding:          speechpb.ExplicitDecodingConfig_LINEAR16,
+							SampleRateHertz:   sampleRate,
+							AudioChannelCount: 1,
+						},
+					},
                                         LanguageCode:    g.languageCode,
                                         Model:           domainModel,
                                         UseEnhanced:     g.enhancedMode,
