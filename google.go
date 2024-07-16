@@ -84,7 +84,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ speechContext }, Boost: 16}}
+	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ speechContext }, Boost: 16}}}
 
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 EnableSpeakerDiarization: true,
