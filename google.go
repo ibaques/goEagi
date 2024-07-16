@@ -88,8 +88,8 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 			PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{
 				{		{Value: "Hello"},
 						{Value: "Bye"},
-					}
-				}
+					},
+				},
 			}
 
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
@@ -240,8 +240,8 @@ func (g *GoogleService) ReinitializeClient() error {
 			PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{
 				{		{Value: "Hello"},
 						{Value: "Bye"},
-					}
-				}
+					},
+				},
 			}
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 MinSpeakerCount:          2,
