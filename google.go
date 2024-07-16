@@ -85,17 +85,16 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 
 	
 	sc := &speechpb.SpeechAdaptation{
-			PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{
-				{ Value : InlinePhraseSet {[]*speechpb.PhraseSet{ Phrases: []*speechpb.PhraseSet_Phrase{
-							{Value: "Hello"},
-							{Value: "Bye"},
-							},
-						 },
+			PhraseSets: []*SpeechAdaptation_AdaptationPhraseSet { 
+				InlinePhraseSet: []*speechpb.PhraseSet{
+					Phrases: []*speechpb.PhraseSet_Phrase{
+						{Value: "Hello"},
+						{Value: "Bye"},
 					},
-				 },
+				},
 			},
 		}
-
+		
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
@@ -241,14 +240,13 @@ func (g *GoogleService) ReinitializeClient() error {
 
 	
 	sc := &speechpb.SpeechAdaptation{
-			PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{
-				{ Value : InlinePhraseSet {[]*speechpb.PhraseSet{ Phrases: []*speechpb.PhraseSet_Phrase{
-							{Value: "Hello"},
-							{Value: "Bye"},
-							},
-						 },
+			PhraseSets: []*SpeechAdaptation_AdaptationPhraseSet { 
+				InlinePhraseSet: []*speechpb.PhraseSet{
+					Phrases: []*speechpb.PhraseSet_Phrase{
+						{Value: "Hello"},
+						{Value: "Bye"},
 					},
-				 },
+				},
 			},
 		}
 	
