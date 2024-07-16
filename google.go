@@ -97,17 +97,20 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
-					Model:           domainModel,
-					UseEnhanced:     g.enhancedMode,
+					Model:           domainModel,					
 					Adaptation:	 []*speechpb.SpeechAdaptation{sc},
-					DiarizationConfig: diarizationConfig,
-					EnableAutomaticPunctuation: true,
-					EnableWordTimeOffsets: true,
-					EnableSpokenPunctuation: wrapperspb.Bool(true),
+					Features: &speechpb.RecognitionFeatures{
+						DiarizationConfig: diarizationConfig,
+						EnableAutomaticPunctuation: true,
+						EnableWordTimeOffsets: true,
+						EnableSpokenPunctuation: wrapperspb.Bool(true),
+					}
 				},
-				InterimResults: true,
-				SingleUtterance: false,
-				EnableVoiceActivityEvents: true,
+				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
+					InterimResults: true,
+					SingleUtterance: false,
+					EnableVoiceActivityEvents: true,
+				}
 			},
 		},
 	}); err != nil {
@@ -239,20 +242,22 @@ func (g *GoogleService) ReinitializeClient() error {
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
-                                Config: &speechpb.RecognitionConfig{
-					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},
-                                        LanguageCode:    g.languageCode,
-                                        Model:           domainModel,
-                                        UseEnhanced:     g.enhancedMode,
-                                        Adaptation:	 []*speechpb.SpeechAdaptation{sc},
-                                        DiarizationConfig: diarizationConfig,
-                                        EnableAutomaticPunctuation: true,
-					EnableWordTimeOffsets: true,
-					EnableSpokenPunctuation: wrapperspb.Bool(true),
-                                },
-                                InterimResults: true,
-                                SingleUtterance: false,
-				EnableVoiceActivityEvents: true,
+				Config: &speechpb.RecognitionConfig{					
+					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
+					Model:           domainModel,					
+					Adaptation:	 []*speechpb.SpeechAdaptation{sc},
+					Features: &speechpb.RecognitionFeatures{
+						DiarizationConfig: diarizationConfig,
+						EnableAutomaticPunctuation: true,
+						EnableWordTimeOffsets: true,
+						EnableSpokenPunctuation: wrapperspb.Bool(true),
+					}
+				},
+				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
+					InterimResults: true,
+					SingleUtterance: false,
+					EnableVoiceActivityEvents: true,
+				}
 			},
 		},
 	}); err != nil {
