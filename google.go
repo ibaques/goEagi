@@ -84,7 +84,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ speechContext }, Boost: 16}}}
+	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ {value: speechContext} }, Boost: 16,}}}
 
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 EnableSpeakerDiarization: true,
@@ -98,7 +98,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,					
-					Adaptation:	 []*speechpb.SpeechAdaptation{sc},
+					Adaptation:	 sc,
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
@@ -107,8 +107,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					},
 				},
 				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
-					InterimResults: true,
-					SingleUtterance: false,
+					InterimResults: true,					
 					EnableVoiceActivityEvents: true,
 				},
 			},
@@ -245,7 +244,7 @@ func (g *GoogleService) ReinitializeClient() error {
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,					
-					Adaptation:	 []*speechpb.SpeechAdaptation{sc},
+					Adaptation:	 sc,
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
@@ -254,8 +253,7 @@ func (g *GoogleService) ReinitializeClient() error {
 					},
 				},
 				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
-					InterimResults: true,
-					SingleUtterance: false,
+					InterimResults: true,					
 					EnableVoiceActivityEvents: true,
 				},
 			},
