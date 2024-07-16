@@ -104,13 +104,13 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 						EnableAutomaticPunctuation: true,
 						EnableWordTimeOffsets: true,
 						EnableSpokenPunctuation: wrapperspb.Bool(true),
-					}
+					},
 				},
 				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
 					InterimResults: true,
 					SingleUtterance: false,
 					EnableVoiceActivityEvents: true,
-				}
+				},
 			},
 		},
 	}); err != nil {
@@ -251,13 +251,13 @@ func (g *GoogleService) ReinitializeClient() error {
 						EnableAutomaticPunctuation: true,
 						EnableWordTimeOffsets: true,
 						EnableSpokenPunctuation: wrapperspb.Bool(true),
-					}
+					},
 				},
 				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
 					InterimResults: true,
 					SingleUtterance: false,
 					EnableVoiceActivityEvents: true,
-				}
+				},
 			},
 		},
 	}); err != nil {
