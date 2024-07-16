@@ -14,7 +14,7 @@ import (
 	"time"
 	
 	speech "cloud.google.com/go/speech/apiv2"
-	"cloud.google.com/go/speech/apiv2/speechpb"
+	speechpb "cloud.google.com/go/speech/apiv2/speechpb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -96,13 +96,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
-					DecodingConfig: &speechpb.RecognitionConfig_ExplicitDecodingConfig{
-						ExplicitDecodingConfig: &speechpb.ExplicitDecodingConfig{
-							Encoding:          speechpb.ExplicitDecodingConfig_LINEAR16,
-							SampleRateHertz:   sampleRate,
-							AudioChannelCount: 1,
-						},
-					},					
+					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,
 					UseEnhanced:     g.enhancedMode,
 					SpeechContexts:  []*speechpb.SpeechContext{sc},
@@ -246,13 +240,7 @@ func (g *GoogleService) ReinitializeClient() error {
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
                                 Config: &speechpb.RecognitionConfig{
- 					DecodingConfig: &speechpb.RecognitionConfig_ExplicitDecodingConfig{
-						ExplicitDecodingConfig: &speechpb.ExplicitDecodingConfig{
-							Encoding:          speechpb.ExplicitDecodingConfig_LINEAR16,
-							SampleRateHertz:   sampleRate,
-							AudioChannelCount: 1,
-						},
-					},
+					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},
                                         LanguageCode:    g.languageCode,
                                         Model:           domainModel,
                                         UseEnhanced:     g.enhancedMode,
