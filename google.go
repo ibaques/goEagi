@@ -83,8 +83,8 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ {value: g.speechContext} }, Boost: 16,}}}
-
+	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{{Value: g.speechContext},},Boost: 16,},},}
+	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
@@ -133,8 +133,8 @@ func (g *GoogleService) StartStreaming(ctx context.Context, stream <-chan []byte
 			case s := <-stream:
 				g.RLock()
 				if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
-					StreamingRequest: &speechpb.StreamingRecognizeRequest_AudioContent{
-						AudioContent: s,
+					StreamingRequest: &speechpb.StreamingRecognizeRequest_Audio{
+						Audio: s,
 					},
 				}); err != nil {
 					startStream <- fmt.Errorf("streaming error: %v\n", err)
@@ -228,7 +228,7 @@ func (g *GoogleService) ReinitializeClient() error {
 		return err
 	}
 
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ {value: g.speechContext} }, Boost: 16,}}}
+	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{{Value: g.speechContext},},Boost: 16,},},}
 	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 MinSpeakerCount:          2,
