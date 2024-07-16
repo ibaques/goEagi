@@ -84,7 +84,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	sc := &speechpb.SpeechContext{Phrases: speechContext}
+	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ speechContext }, Boost: 16}}
 
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 EnableSpeakerDiarization: true,
@@ -99,7 +99,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,
 					UseEnhanced:     g.enhancedMode,
-					SpeechContexts:  []*speechpb.SpeechContext{sc},
+					Adaptation:	 []*speechpb.SpeechAdaptation{sc},
 					DiarizationConfig: diarizationConfig,
 					EnableAutomaticPunctuation: true,
 					EnableWordTimeOffsets: true,
@@ -244,7 +244,7 @@ func (g *GoogleService) ReinitializeClient() error {
                                         LanguageCode:    g.languageCode,
                                         Model:           domainModel,
                                         UseEnhanced:     g.enhancedMode,
-                                        SpeechContexts:  []*speechpb.SpeechContext{sc},
+                                        Adaptation:	 []*speechpb.SpeechAdaptation{sc},
                                         DiarizationConfig: diarizationConfig,
                                         EnableAutomaticPunctuation: true,
 					EnableWordTimeOffsets: true,
