@@ -83,8 +83,15 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{Value: "$OOV_CLASS_ALPHANUMERIC_SEQUENCE"}}
 	
+	sc := &speechpb.SpeechAdaptation{
+			PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{
+				{		{Value: "Hello"},
+						{Value: "Bye"},
+					}
+				}
+			}
+
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
@@ -229,8 +236,13 @@ func (g *GoogleService) ReinitializeClient() error {
 	}
 
 	
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{Value: "$OOV_CLASS_ALPHANUMERIC_SEQUENCE"}}
-	
+	sc := &speechpb.SpeechAdaptation{
+			PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{
+				{		{Value: "Hello"},
+						{Value: "Bye"},
+					}
+				}
+			}
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
