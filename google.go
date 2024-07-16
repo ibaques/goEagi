@@ -91,7 +91,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 						{Value: "Bye"},
 						},
 					 },
-				}
+				},
 			},
 		}
 
@@ -246,7 +246,7 @@ func (g *GoogleService) ReinitializeClient() error {
 						{Value: "Bye"},
 						},
 					 },
-				}
+				},
 			},
 		}
 	
