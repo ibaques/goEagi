@@ -15,7 +15,6 @@ import (
 	
 	speech "cloud.google.com/go/speech/apiv2"
 	speechpb "cloud.google.com/go/speech/apiv2/speechpb"
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -84,10 +83,9 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ {value: speechContext} }, Boost: 16,}}}
+	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ {value: g.speechContext} }, Boost: 16,}}}
 
-	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
-                EnableSpeakerDiarization: true,
+	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
         }
@@ -103,7 +101,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
 						EnableWordTimeOffsets: true,
-						EnableSpokenPunctuation: wrapperspb.Bool(true),
+						EnableSpokenPunctuation: true,
 					},
 				},
 				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
@@ -230,10 +228,9 @@ func (g *GoogleService) ReinitializeClient() error {
 		return err
 	}
 
-	sc := &speechpb.SpeechContext{Phrases: g.speechContext}
+	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.PhraseSet{{Phrases: []*speechpb.PhraseSet_Phrase{ {value: g.speechContext} }, Boost: 16,}}}
 	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
-                EnableSpeakerDiarization: true,
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
         }
@@ -249,7 +246,7 @@ func (g *GoogleService) ReinitializeClient() error {
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
 						EnableWordTimeOffsets: true,
-						EnableSpokenPunctuation: wrapperspb.Bool(true),
+						EnableSpokenPunctuation: true,
 					},
 				},
 				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
