@@ -97,7 +97,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					Adaptation:	&speechpb.SpeechAdaptation{
 								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
 									{Value: *speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
-										InlinePhraseSet: *speechpb.PhareSet {
+										InlinePhraseSet: *speechpb.PhraseSet {
 											Phrases: []*speechpb.PhraseSet_Phrase {
 												{Value:"hello"},
 												{Value:"bye"},
@@ -253,14 +253,13 @@ func (g *GoogleService) ReinitializeClient() error {
 					Model:           domainModel,					
 					Adaptation:	&speechpb.SpeechAdaptation{
 								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
-									{Value: *speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
-										InlinePhraseSet: *speechpb.PhareSet {
+									Value: *speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
+										InlinePhraseSet: *speechpb.PhraseSet {
 											Phrases: []*speechpb.PhraseSet_Phrase {
 												{Value:"hello"},
 												{Value:"bye"},
 											},
-										},
-									},									
+										},																		
 									},
 								},
 					},
