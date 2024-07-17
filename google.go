@@ -78,7 +78,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	g.client, err = client.StreamingRecognize(ctx)
+	g.client, err := client.StreamingRecognize(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -92,15 +92,13 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		Parent: fmt.Sprintf("project/%s/locations/global", projectId),
 	}
 	op, err :=client.CreateRecognizer(ctx,reqre)
-	if err != nil{
-		Error(err)
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	respre, err := op.Wait(ctx)
-	if err := nil{
-		Error(err)
-		return
+	if err != nil {
+		return nil, err
 	}	
 	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
@@ -256,7 +254,7 @@ func (g *GoogleService) ReinitializeClient() error {
 		return err
 	}
 
-	g.client, err = client.StreamingRecognize(ctx)
+	g.client, err := client.StreamingRecognize(ctx)
 	if err != nil {
 		return err
 	}
@@ -270,15 +268,13 @@ func (g *GoogleService) ReinitializeClient() error {
 		Parent: fmt.Sprintf("project/%s/locations/global", projectId),
 	}
 	op, err :=client.CreateRecognizer(ctx,reqre)
-	if err != nil{
-		Error(err)
-		return
+	if err != nil {
+		return nil, err
 	}
 
 	respre, err := op.Wait(ctx)
-	if err := nil{
-		Error(err)
-		return
+	if err != nil {
+		return nil, err
 	}	
 		
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
