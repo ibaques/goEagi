@@ -65,13 +65,6 @@ func NewGoogleService(privateKeyPath string, languageCode []string, speechContex
 		speechContext:  speechContext,
 	}
 
-	for _, v := range supportedEnhancedMode() {
-		if v == languageCode {
-			g.enhancedMode = true
-			break
-		}
-	}
-
 	ctx := context.Background()
 
 	client, err := speech.NewClient(ctx)
@@ -286,9 +279,4 @@ func (g *GoogleService) ReinitializeClient() error {
 	}
 
 	return nil
-}
-
-// supportedEnhancedMode returns a list of supported language code for enhanced mode.
-func supportedEnhancedMode() []string {
-	return []string{"es-US", "en-GB", "en-US", "fr-FR", "ja-JP", "pt-BR", "ru-RU", "es-ES"}
 }
