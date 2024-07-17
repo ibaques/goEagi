@@ -16,9 +16,10 @@ import (
 	speech "cloud.google.com/go/speech/apiv2"
 	speechpb "cloud.google.com/go/speech/apiv2/speechpb"
 )
-var projectID="speech-project-176309"
+
 
 const (
+	projectID = "speech-project-176309"
 	location = "global"
 	sampleRate  = 8000
 	domainModel = "telephony"
