@@ -82,22 +82,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 	if err != nil {
 		return nil, err
 	}
-
-	sc := {
-            "phraseSets": [
-                {
-                    "inlinePhraseSet": {
-                        "phrases": [
-                            {
-                                "value": "u",
-                                "boost": 20
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-		
+	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
@@ -109,7 +94,9 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,					
-					Adaptation:	 sc,
+					Adaptation:	 { "phraseSets": [{"inlinePhraseSet": { "phrases": [
+								{"value": "u","boost": 20}
+                        				]}}]},
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
@@ -242,21 +229,7 @@ func (g *GoogleService) ReinitializeClient() error {
 	}
 
 	
-	sc := {
-            "phraseSets": [
-                {
-                    "inlinePhraseSet": {
-                        "phrases": [
-                            {
-                                "value": "u",
-                                "boost": 20
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-	
+		
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
@@ -268,7 +241,9 @@ func (g *GoogleService) ReinitializeClient() error {
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,					
-					Adaptation:	 sc,
+					Adaptation:	 { "phraseSets": [{"inlinePhraseSet": { "phrases": [
+								{"value": "u","boost": 20}
+                        				]}}]},
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
