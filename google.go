@@ -35,7 +35,7 @@ type GoogleResult struct {
 
 // GoogleService is used to stream audio data to Google Speech to Text service.
 type GoogleService struct {
-	languageCode   string
+	languageCode   []string
 	privateKeyPath string
 	enhancedMode   bool
 	speechContext  []string
@@ -91,12 +91,11 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
-			Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},
 					Model:           domainModel,
-					LanguageCodes:   []g.languageCode,
+					LanguageCodes:   g.languageCode,
 					Adaptation:	&speechpb.SpeechAdaptation{
 								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
 									{Value: &speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
@@ -123,6 +122,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				},
 			},
 		},
+		Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 	}); err != nil {
 		return nil, err
 	}
@@ -248,13 +248,12 @@ func (g *GoogleService) ReinitializeClient() error {
         }
 	
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
-		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
-			Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
+		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{			
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,
-					LanguageCodes:   []g.languageCode,
+					LanguageCodes:   g.languageCode,
 					Adaptation:	&speechpb.SpeechAdaptation{
 								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
 									{Value: &speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
@@ -281,7 +280,7 @@ func (g *GoogleService) ReinitializeClient() error {
 				},
 			},
 		},
-		Recognizer: respre.Name,
+		Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 	}); err != nil {
 		return err
 	}
