@@ -83,8 +83,20 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	phrase_set := &speechpb.PhraseSet{Phrases: []*speechpb.PhraseSet_Phrase{{Value: "Hello"},{Value: "Bye"}}}
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{InlinePhraseSet: phrase_set}}
+	sc := {
+            "phraseSets": [
+                {
+                    "inlinePhraseSet": {
+                        "phrases": [
+                            {
+                                "value": "u",
+                                "boost": 20
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
 		
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
                 MinSpeakerCount:          2,
@@ -230,8 +242,20 @@ func (g *GoogleService) ReinitializeClient() error {
 	}
 
 	
-	phrase_set := &speechpb.PhraseSet{Phrases: []*speechpb.PhraseSet_Phrase{{Value: "Hello"},{Value: "Bye"}}}
-	sc := &speechpb.SpeechAdaptation{PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{InlinePhraseSet: phrase_set}}
+	sc := {
+            "phraseSets": [
+                {
+                    "inlinePhraseSet": {
+                        "phrases": [
+                            {
+                                "value": "u",
+                                "boost": 20
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
 	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 MinSpeakerCount:          2,
