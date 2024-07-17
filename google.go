@@ -95,10 +95,10 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,					
 					Adaptation:	&speechpb.SpeechAdaptation{
-								PhraseSets: []*speechb.SpeechAdaptation_AdaptationPhraseSet {
-									{Value: *speechb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
-										InlinePhraseSet: *speechb.PhareSet {
-											Phrases: []*speechb.PhraseSet_Phrase {
+								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
+									{Value: *speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
+										InlinePhraseSet: *speechpb.PhareSet {
+											Phrases: []*speechpb.PhraseSet_Phrase {
 												{Value:"hello"},
 												{Value:"bye"},
 											},
@@ -252,10 +252,10 @@ func (g *GoogleService) ReinitializeClient() error {
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,					
 					Adaptation:	&speechpb.SpeechAdaptation{
-								PhraseSets: []*speechb.SpeechAdaptation_AdaptationPhraseSet {
-									{Value: *speechb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
-										InlinePhraseSet: *speechb.PhareSet {
-											Phrases: []*speechb.PhraseSet_Phrase {
+								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
+									{Value: *speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
+										InlinePhraseSet: *speechpb.PhareSet {
+											Phrases: []*speechpb.PhraseSet_Phrase {
 												{Value:"hello"},
 												{Value:"bye"},
 											},
