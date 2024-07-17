@@ -48,7 +48,7 @@ type GoogleService struct {
 // it takes a privateKeyPath and set it in environment with key GOOGLE_APPLICATION_CREDENTIALS,
 // a languageCode, example ["en-GB", "en-US", "ch", ...], see (https://cloud.google.com/speech-to-text/docs/languages),
 // and a speech context, see (https://cloud.google.com/speech-to-text/docs/speech-adaptation).
-func NewGoogleService(privateKeyPath string, languageCode string, speechContext []string) (*GoogleService, error) {
+func NewGoogleService(privateKeyPath string, languageCode []string, speechContext []string) (*GoogleService, error) {
 	if len(strings.TrimSpace(privateKeyPath)) == 0 {
 		return nil, errors.New("private key path is empty")
 	}
