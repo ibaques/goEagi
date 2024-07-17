@@ -149,7 +149,7 @@ func (g *GoogleService) StartStreaming(ctx context.Context, stream <-chan []byte
 					Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 					StreamingRequest: &speechpb.StreamingRecognizeRequest_Audio{
 						Audio: s,
-					}
+					},
 				}); err != nil {
 					startStream <- fmt.Errorf("streaming error: %v\n", err)
 					return
