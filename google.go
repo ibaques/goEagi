@@ -94,9 +94,19 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,					
-					Adaptation:	 { "phraseSets": [{"inlinePhraseSet": { "phrases": [
-								{"value": "u","boost": 20}
-                        				]}}]},
+					Adaptation:	&speechpb.SpeechAdaptation{
+								PhraseSets: []*speechb.SpeechAdaptation_AdaptationPhraseSet {
+									{Value: *speechb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
+										InlinePhraseSet: *speechb.PhareSet {
+											Phrases: []*speechb.PhraseSet_Phrase {
+												{Value:"hello"},
+												{Value:"bye"},
+											},
+										},
+									},									
+									},
+								},
+					},
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
@@ -241,9 +251,19 @@ func (g *GoogleService) ReinitializeClient() error {
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,					
-					Adaptation:	 { "phraseSets": [{"inlinePhraseSet": { "phrases": [
-								{"value": "u","boost": 20}
-                        				]}}]},
+					Adaptation:	&speechpb.SpeechAdaptation{
+								PhraseSets: []*speechb.SpeechAdaptation_AdaptationPhraseSet {
+									{Value: *speechb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
+										InlinePhraseSet: *speechb.PhareSet {
+											Phrases: []*speechb.PhraseSet_Phrase {
+												{Value:"hello"},
+												{Value:"bye"},
+											},
+										},
+									},									
+									},
+								},
+					},
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
