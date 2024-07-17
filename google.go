@@ -90,19 +90,7 @@ func NewGoogleService(privateKeyPath string, languageCode []string, speechContex
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},
 					Model:           domainModel,
 					LanguageCodes:   g.languageCode,
-					Adaptation:	&speechpb.SpeechAdaptation{
-								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
-									{Value: &speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
-										InlinePhraseSet: &speechpb.PhraseSet {
-											Phrases: []*speechpb.PhraseSet_Phrase {
-												{Value:"hello"},
-												{Value:"bye"},
-											},											
-										},
-									},	
-									},
-								},
-					},
+					Adaptation:	nil,
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
@@ -248,19 +236,7 @@ func (g *GoogleService) ReinitializeClient() error {
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,
 					LanguageCodes:   g.languageCode,
-					Adaptation:	&speechpb.SpeechAdaptation{
-								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
-									{Value: &speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
-										InlinePhraseSet: &speechpb.PhraseSet {
-											Phrases: []*speechpb.PhraseSet_Phrase {
-												{Value:"hello"},
-												{Value:"bye"},
-											},											
-										},
-									},	
-									},
-								},
-					},
+					Adaptation:	nil,
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
