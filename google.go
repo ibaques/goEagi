@@ -16,11 +16,12 @@ import (
 	speech "cloud.google.com/go/speech/apiv2"
 	speechpb "cloud.google.com/go/speech/apiv2/speechpb"
 )
+var projectID="speech-project-176309"
 
 const (
+	location = "global"
 	sampleRate  = 8000
 	domainModel = "telephony"
-
 	reinitializationTimeout = 4*time.Minute + 50*time.Second
 )
 
@@ -78,28 +79,10 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	g.client, err := client.StreamingRecognize(ctx)
+	g.client, err = client.StreamingRecognize(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	reqre := &speechpb.CreateRecognizerRequest{
-		Recognizer: &speechpb.Recognizer{
-			Model:           domainModel,
-			LanguageCodes:    g.languageCode,
-		},
-		RecognizerId: "stt",
-		Parent: fmt.Sprintf("project/%s/locations/global", projectId),
-	}
-	op, err :=client.CreateRecognizer(ctx,reqre)
-	if err != nil {
-		return nil, err
-	}
-
-	respre, err := op.Wait(ctx)
-	if err != nil {
-		return nil, err
-	}	
 	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
                 MinSpeakerCount:          2,
@@ -108,11 +91,12 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
+			Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},
 					Model:           domainModel,
-					LanguageCodes:    g.languageCode,
+					LanguageCodes:   []g.languageCode,
 					Adaptation:	&speechpb.SpeechAdaptation{
 								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
 									{Value: &speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
@@ -139,7 +123,6 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				},
 			},
 		},
-		Recognizer: respre.Name,
 	}); err != nil {
 		return nil, err
 	}
@@ -163,10 +146,10 @@ func (g *GoogleService) StartStreaming(ctx context.Context, stream <-chan []byte
 			case s := <-stream:
 				g.RLock()
 				if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
+					Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 					StreamingRequest: &speechpb.StreamingRecognizeRequest_Audio{
 						Audio: s,
-					},
-					Recognizer: respre.Name,
+					}
 				}); err != nil {
 					startStream <- fmt.Errorf("streaming error: %v\n", err)
 					return
@@ -254,29 +237,11 @@ func (g *GoogleService) ReinitializeClient() error {
 		return err
 	}
 
-	g.client, err := client.StreamingRecognize(ctx)
+	g.client, err = client.StreamingRecognize(ctx)
 	if err != nil {
 		return err
 	}
-
-	reqre := &speechpb.CreateRecognizerRequest{
-		Recognizer: &speechpb.Recognizer{
-			Model:           domainModel,
-			LanguageCodes:    g.languageCode,
-		},
-		RecognizerId: "stt",
-		Parent: fmt.Sprintf("project/%s/locations/global", projectId),
-	}
-	op, err :=client.CreateRecognizer(ctx,reqre)
-	if err != nil {
-		return nil, err
-	}
-
-	respre, err := op.Wait(ctx)
-	if err != nil {
-		return nil, err
-	}	
-		
+	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 MinSpeakerCount:          2,
                 MaxSpeakerCount:          2,
@@ -284,11 +249,12 @@ func (g *GoogleService) ReinitializeClient() error {
 	
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
+			Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
 					Model:           domainModel,
-					LanguageCodes:    g.languageCode,
+					LanguageCodes:   []g.languageCode,
 					Adaptation:	&speechpb.SpeechAdaptation{
 								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
 									{Value: &speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
