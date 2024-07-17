@@ -82,6 +82,26 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 	if err != nil {
 		return nil, err
 	}
+
+	reqre := &speechpb.CreateRecognizerRequest{
+		Recognizer: &speechpb.Recognizer{
+			Model:           domainModel,
+			LanguageCodes:    g.languageCode,
+		},
+		RecognizerId: "stt",
+		Parent: fmt.Sprintf("project/%s/locations/global", projectId),
+	}
+	op, err :=client.CreateRecognizer(ctx,reqre)
+	if err != nil{
+		Error(err)
+		return
+	}
+
+	respre, err := op.Wait(ctx)
+	if err := nil{
+		Error(err)
+		return
+	}	
 	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
                 MinSpeakerCount:          2,
@@ -92,8 +112,9 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
-					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
-					Model:           domainModel,					
+					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},
+					Model:           domainModel,
+					LanguageCodes:    g.languageCode,
 					Adaptation:	&speechpb.SpeechAdaptation{
 								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
 									{Value: &speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
@@ -120,6 +141,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				},
 			},
 		},
+		Recognizer: respre.Name,
 	}); err != nil {
 		return nil, err
 	}
@@ -146,6 +168,7 @@ func (g *GoogleService) StartStreaming(ctx context.Context, stream <-chan []byte
 					StreamingRequest: &speechpb.StreamingRecognizeRequest_Audio{
 						Audio: s,
 					},
+					Recognizer: respre.Name,
 				}); err != nil {
 					startStream <- fmt.Errorf("streaming error: %v\n", err)
 					return
@@ -238,7 +261,25 @@ func (g *GoogleService) ReinitializeClient() error {
 		return err
 	}
 
-	
+	reqre := &speechpb.CreateRecognizerRequest{
+		Recognizer: &speechpb.Recognizer{
+			Model:           domainModel,
+			LanguageCodes:    g.languageCode,
+		},
+		RecognizerId: "stt",
+		Parent: fmt.Sprintf("project/%s/locations/global", projectId),
+	}
+	op, err :=client.CreateRecognizer(ctx,reqre)
+	if err != nil{
+		Error(err)
+		return
+	}
+
+	respre, err := op.Wait(ctx)
+	if err := nil{
+		Error(err)
+		return
+	}	
 		
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 MinSpeakerCount:          2,
@@ -250,7 +291,8 @@ func (g *GoogleService) ReinitializeClient() error {
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
-					Model:           domainModel,					
+					Model:           domainModel,
+					LanguageCodes:    g.languageCode,
 					Adaptation:	&speechpb.SpeechAdaptation{
 								PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet {
 									{Value: &speechpb.SpeechAdaptation_AdaptationPhraseSet_InlinePhraseSet {
@@ -277,6 +319,7 @@ func (g *GoogleService) ReinitializeClient() error {
 				},
 			},
 		},
+		Recognizer: respre.Name,
 	}); err != nil {
 		return err
 	}
