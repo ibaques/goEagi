@@ -88,8 +88,8 @@ func NewGoogleService(privateKeyPath string, languageCode []string, speechContex
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},
-					Model:           domainModel,
-					LanguageCodes:   g.languageCode,
+					Model:           "telephony",
+					LanguageCodes:   []string{"es-ES"},
 					Adaptation:	nil,
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
@@ -234,8 +234,8 @@ func (g *GoogleService) ReinitializeClient() error {
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
 					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
-					Model:           domainModel,
-					LanguageCodes:   g.languageCode,
+					Model:           "telephony",
+					LanguageCodes:   []string{"es-ES"},
 					Adaptation:	nil,
 					Features: &speechpb.RecognitionFeatures{
 						DiarizationConfig: diarizationConfig,
