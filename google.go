@@ -29,7 +29,7 @@ const (
 type GoogleResult struct {
 	Result            *speechpb.StreamingRecognizeResponse
 	Error             error
-	TotalBilledTime   string
+	TotalBilledTime   time.Duration
 	Reinitialized     bool
 	ReinitializedInfo string
 }
