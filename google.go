@@ -90,7 +90,7 @@ func NewGoogleService(privateKeyPath string, languageCode []string, speechContex
 							AudioChannelCount: 1,
 						},
 					},
-					Model:           "long",
+					Model:           "telephony",
 					LanguageCodes:   []string{"es-ES"},
 					Adaptation:	nil,
 					Features: &speechpb.RecognitionFeatures{
@@ -99,7 +99,7 @@ func NewGoogleService(privateKeyPath string, languageCode []string, speechContex
 						EnableSpokenPunctuation: true,
 					},
 				},
-				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{InterimResults: true},
+				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{InterimResults: false},
 			},
 		},
 	}); err != nil {
@@ -233,7 +233,7 @@ func (g *GoogleService) ReinitializeClient() error {
 							AudioChannelCount: 1,
 						},
 					},
-					Model:           "long",
+					Model:           "telephony",
 					LanguageCodes:   []string{"es-ES"},
 					Adaptation:	nil,
 					Features: &speechpb.RecognitionFeatures{
@@ -242,7 +242,7 @@ func (g *GoogleService) ReinitializeClient() error {
 						EnableSpokenPunctuation: true,
 					},
 				},
-				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{InterimResults: true},
+				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{InterimResults: false},
 			},
 		},
 	}); err != nil {
