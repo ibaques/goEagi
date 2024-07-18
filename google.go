@@ -77,34 +77,31 @@ func NewGoogleService(privateKeyPath string, languageCode []string, speechContex
 	if err != nil {
 		return nil, err
 	}
-	
-	diarizationConfig := &speechpb.SpeakerDiarizationConfig{                
-                MinSpeakerCount:          2,
-                MaxSpeakerCount:          2,
-        }
-
+		
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
+		Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
-					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},
-					Model:           "telephony",
+					DecodingConfig: &speechpb.RecognitionConfig_ExplicitDecodingConfig{
+						ExplicitDecodingConfig: &speechpb.ExplicitDecodingConfig{
+							Encoding:          speechpb.ExplicitDecodingConfig_LINEAR16,
+							SampleRateHertz:   8000,
+							AudioChannelCount: 1,
+						},
+					},
+					Model:           "long",
 					LanguageCodes:   []string{"es-ES"},
 					Adaptation:	nil,
 					Features: &speechpb.RecognitionFeatures{
-						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
 						EnableWordTimeOffsets: true,
 						EnableSpokenPunctuation: true,
 					},
 				},
-				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
-					InterimResults: true,					
-					EnableVoiceActivityEvents: true,
-				},
+				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{InterimResults: true},
 			},
 		},
-		Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 	}); err != nil {
 		return nil, err
 	}
@@ -224,33 +221,30 @@ func (g *GoogleService) ReinitializeClient() error {
 		return err
 	}
 	
-	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
-                MinSpeakerCount:          2,
-                MaxSpeakerCount:          2,
-        }
-	
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
-		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{			
+		Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
+		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
 				Config: &speechpb.RecognitionConfig{					
-					DecodingConfig: &speechpb.RecognitionConfig_AutoDecodingConfig{},					
-					Model:           "telephony",
+					DecodingConfig: &speechpb.RecognitionConfig_ExplicitDecodingConfig{
+						ExplicitDecodingConfig: &speechpb.ExplicitDecodingConfig{
+							Encoding:          speechpb.ExplicitDecodingConfig_LINEAR16,
+							SampleRateHertz:   8000,
+							AudioChannelCount: 1,
+						},
+					},
+					Model:           "long",
 					LanguageCodes:   []string{"es-ES"},
 					Adaptation:	nil,
 					Features: &speechpb.RecognitionFeatures{
-						DiarizationConfig: diarizationConfig,
 						EnableAutomaticPunctuation: true,
 						EnableWordTimeOffsets: true,
 						EnableSpokenPunctuation: true,
 					},
 				},
-				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{
-					InterimResults: true,					
-					EnableVoiceActivityEvents: true,
-				},
+				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{InterimResults: true},
 			},
 		},
-		Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 	}); err != nil {
 		return err
 	}
