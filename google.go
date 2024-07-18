@@ -12,17 +12,16 @@ import (
 	"strings"
 	"sync"
 	"time"
-	
-	speech "cloud.google.com/go/speech/apiv2"
-	speechpb "cloud.google.com/go/speech/apiv2/speechpb"
+
+	speech "cloud.google.com/go/speech/apiv1"
+	speechpb "cloud.google.com/go/speech/apiv1/speechpb"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-
 const (
-	projectID = "speech-project-176309"
-	location = "global"
 	sampleRate  = 8000
-	domainModel = "telephony"
+	domainModel = "phone_call"
+
 	reinitializationTimeout = 4*time.Minute + 50*time.Second
 )
 
@@ -36,7 +35,7 @@ type GoogleResult struct {
 
 // GoogleService is used to stream audio data to Google Speech to Text service.
 type GoogleService struct {
-	languageCode   []string
+	languageCode   string
 	privateKeyPath string
 	enhancedMode   bool
 	speechContext  []string
@@ -49,7 +48,7 @@ type GoogleService struct {
 // it takes a privateKeyPath and set it in environment with key GOOGLE_APPLICATION_CREDENTIALS,
 // a languageCode, example ["en-GB", "en-US", "ch", ...], see (https://cloud.google.com/speech-to-text/docs/languages),
 // and a speech context, see (https://cloud.google.com/speech-to-text/docs/speech-adaptation).
-func NewGoogleService(privateKeyPath string, languageCode []string, speechContext []string) (*GoogleService, error) {
+func NewGoogleService(privateKeyPath string, languageCode string, speechContext []string) (*GoogleService, error) {
 	if len(strings.TrimSpace(privateKeyPath)) == 0 {
 		return nil, errors.New("private key path is empty")
 	}
@@ -66,6 +65,13 @@ func NewGoogleService(privateKeyPath string, languageCode []string, speechContex
 		speechContext:  speechContext,
 	}
 
+	for _, v := range supportedEnhancedMode() {
+		if v == languageCode {
+			g.enhancedMode = true
+			break
+		}
+	}
+
 	ctx := context.Background()
 
 	client, err := speech.NewClient(ctx)
@@ -77,29 +83,33 @@ func NewGoogleService(privateKeyPath string, languageCode []string, speechContex
 	if err != nil {
 		return nil, err
 	}
-		
+
+	sc := &speechpb.SpeechContext{Phrases: speechContext}
+
+	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
+                EnableSpeakerDiarization: true,
+                MinSpeakerCount:          2,
+                MaxSpeakerCount:          2,
+        }
+
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
-		Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
-				Config: &speechpb.RecognitionConfig{					
-					DecodingConfig: &speechpb.RecognitionConfig_ExplicitDecodingConfig{
-						ExplicitDecodingConfig: &speechpb.ExplicitDecodingConfig{
-							Encoding:          speechpb.ExplicitDecodingConfig_LINEAR16,
-							SampleRateHertz:   8000,
-							AudioChannelCount: 1,
-						},
-					},
-					Model:           "telephony",
-					LanguageCodes:   []string{"es-ES"},
-					Adaptation:	nil,
-					Features: &speechpb.RecognitionFeatures{
-						EnableAutomaticPunctuation: true,
-						EnableWordTimeOffsets: true,
-						EnableSpokenPunctuation: true,
-					},
+				Config: &speechpb.RecognitionConfig{
+					Encoding:        speechpb.RecognitionConfig_LINEAR16,
+					SampleRateHertz: sampleRate,
+					LanguageCode:    g.languageCode,
+					Model:           domainModel,
+					UseEnhanced:     g.enhancedMode,
+					SpeechContexts:  []*speechpb.SpeechContext{sc},
+					DiarizationConfig: diarizationConfig,
+					EnableAutomaticPunctuation: true,
+					EnableWordTimeOffsets: true,
+					EnableSpokenPunctuation: wrapperspb.Bool(true),
 				},
-				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{InterimResults: false},
+				InterimResults: true,
+				SingleUtterance: false,
+				EnableVoiceActivityEvents: true,
 			},
 		},
 	}); err != nil {
@@ -125,9 +135,8 @@ func (g *GoogleService) StartStreaming(ctx context.Context, stream <-chan []byte
 			case s := <-stream:
 				g.RLock()
 				if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
-					Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
-					StreamingRequest: &speechpb.StreamingRecognizeRequest_Audio{
-						Audio: s,
+					StreamingRequest: &speechpb.StreamingRecognizeRequest_AudioContent{
+						AudioContent: s,
 					},
 				}); err != nil {
 					startStream <- fmt.Errorf("streaming error: %v\n", err)
@@ -220,29 +229,33 @@ func (g *GoogleService) ReinitializeClient() error {
 	if err != nil {
 		return err
 	}
+
+	sc := &speechpb.SpeechContext{Phrases: g.speechContext}
+	
+	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
+                EnableSpeakerDiarization: true,
+                MinSpeakerCount:          2,
+                MaxSpeakerCount:          2,
+        }
 	
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
-		Recognizer: fmt.Sprintf("projects/%s/locations/%s/recognizers/_", projectID, location),
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
 			StreamingConfig: &speechpb.StreamingRecognitionConfig{
-				Config: &speechpb.RecognitionConfig{					
-					DecodingConfig: &speechpb.RecognitionConfig_ExplicitDecodingConfig{
-						ExplicitDecodingConfig: &speechpb.ExplicitDecodingConfig{
-							Encoding:          speechpb.ExplicitDecodingConfig_LINEAR16,
-							SampleRateHertz:   8000,
-							AudioChannelCount: 1,
-						},
-					},
-					Model:           "telephony",
-					LanguageCodes:   []string{"es-ES"},
-					Adaptation:	nil,
-					Features: &speechpb.RecognitionFeatures{
-						EnableAutomaticPunctuation: true,
-						EnableWordTimeOffsets: true,
-						EnableSpokenPunctuation: true,
-					},
-				},
-				StreamingFeatures: &speechpb.StreamingRecognitionFeatures{InterimResults: false},
+                                Config: &speechpb.RecognitionConfig{
+                                        Encoding:        speechpb.RecognitionConfig_LINEAR16,
+                                        SampleRateHertz: sampleRate,
+                                        LanguageCode:    g.languageCode,
+                                        Model:           domainModel,
+                                        UseEnhanced:     g.enhancedMode,
+                                        SpeechContexts:  []*speechpb.SpeechContext{sc},
+                                        DiarizationConfig: diarizationConfig,
+                                        EnableAutomaticPunctuation: true,
+					EnableWordTimeOffsets: true,
+					EnableSpokenPunctuation: wrapperspb.Bool(true),
+                                },
+                                InterimResults: true,
+                                SingleUtterance: false,
+				EnableVoiceActivityEvents: true,
 			},
 		},
 	}); err != nil {
@@ -250,4 +263,9 @@ func (g *GoogleService) ReinitializeClient() error {
 	}
 
 	return nil
+}
+
+// supportedEnhancedMode returns a list of supported language code for enhanced mode.
+func supportedEnhancedMode() []string {
+	return []string{"es-US", "en-GB", "en-US", "fr-FR", "ja-JP", "pt-BR", "ru-RU", "es-ES"}
 }
