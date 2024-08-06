@@ -198,7 +198,7 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 				}
 
 				if err != nil {
-					googleResultStream <- GoogleResult{Error: fmt.Errorf("cannot stream results: %v", err)}
+					googleResultStream <- GoogleResult{Error: err}
 					return
 				}
 				
