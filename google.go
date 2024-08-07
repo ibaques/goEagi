@@ -89,7 +89,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 EnableSpeakerDiarization: true,
-                MinSpeakerCount:          2,
+                MinSpeakerCount:          1,
                 MaxSpeakerCount:          2,
         }
 
@@ -235,7 +235,7 @@ func (g *GoogleService) ReinitializeClient() error {
 	
 	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
                 EnableSpeakerDiarization: true,
-                MinSpeakerCount:          2,
+                MinSpeakerCount:          1,
                 MaxSpeakerCount:          2,
         }
 	
