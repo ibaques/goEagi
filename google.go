@@ -21,7 +21,6 @@ import (
 const (
 	sampleRate  = 8000
 	domainModel = "phone_call"
-
 	reinitializationTimeout = 4*time.Minute + 50*time.Second
 )
 
@@ -73,6 +72,20 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		}
 	}
 
+	for _, v := range supportedTelephony() {
+		if v == languageCode {
+			domainModel = "telephony"
+			break
+		}
+	}
+	
+	for _, v := range supportedDefault() {
+		if v == languageCode {
+			domainModel = "default"
+			break
+		}
+	}
+	
 	ctx := context.Background()
 
 	client, err := speech.NewClient(ctx)
@@ -257,4 +270,12 @@ func (g *GoogleService) ReinitializeClient() error {
 // supportedEnhancedMode returns a list of supported language code for enhanced mode.
 func supportedEnhancedMode() []string {
 	return []string{"es-US", "en-GB", "en-US", "fr-FR", "ja-JP", "pt-BR", "ru-RU", "es-ES"}
+}
+
+func supportedTelephony() []string {
+	return []string{"pt-PT", "nl-NL"}
+}
+
+func supportedDefault() []string {
+	return []string{"ca-ES", "da-DK"}
 }
