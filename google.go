@@ -22,7 +22,7 @@ const (
 	sampleRate  = 8000
 	domainModel = "phone_call"
 
-	reinitializationTimeout = 1*time.Minute + 5*time.Second
+	reinitializationTimeout = 4*time.Minute + 50*time.Second
 )
 
 // GoogleResult is a struct that contains transcription result from Google Speech to Text service.
