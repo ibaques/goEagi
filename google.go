@@ -22,7 +22,7 @@ const (
 	sampleRate  = 8000
 	domainModel = "phone_call"
 
-	reinitializationTimeout = 29*time.Minute + 50*time.Second
+	reinitializationTimeout = 1*time.Minute + 5*time.Second
 )
 
 // GoogleResult is a struct that contains transcription result from Google Speech to Text service.
@@ -177,8 +177,8 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 					googleResultStream <- GoogleResult{Error: fmt.Errorf("failed to reinitialize client: %v", err)}
 					g.Unlock()
 					return
-				}
-
+				} 
+				
 				googleResultStream <- GoogleResult{
 					Reinitialized:     false,
 					ReinitializedInfo: "reinitialized client successfully",
@@ -219,8 +219,11 @@ func (g *GoogleService) Close() error {
 
 // ReinitializeClient reinitializes the Google client.
 func (g *GoogleService) ReinitializeClient() error {
+	g.client.end()
+	g.client = nil
+	
 	ctx := context.Background()
-
+		
 	client, err := speech.NewClient(ctx)
 	if err != nil {
 		return err
