@@ -219,8 +219,7 @@ func (g *GoogleService) Close() error {
 
 // ReinitializeClient reinitializes the Google client.
 func (g *GoogleService) ReinitializeClient() error {
-	g.client.end()
-	g.client = nil
+	g.client.CloseSend()	
 	
 	ctx := context.Background()
 		
