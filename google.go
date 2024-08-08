@@ -173,11 +173,8 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 					ReinitializedInfo: fmt.Sprintf("reinitialized client after %v", reinitializationTimeout),
 				}
 
-				if err := g.ReinitializeClient(); err != nil {
-					googleResultStream <- GoogleResult{Error: fmt.Errorf("failed to reinitialize client: %v", err)}
-					g.Unlock()
-					return
-				} 
+				g.client.CloseSend()
+				
 				
 				googleResultStream <- GoogleResult{
 					Reinitialized:     false,
@@ -219,14 +216,7 @@ func (g *GoogleService) Close() error {
 
 // ReinitializeClient reinitializes the Google client.
 func (g *GoogleService) ReinitializeClient() error {
-	g.client.CloseSend()	
-	
 	ctx := context.Background()
-		
-	client, err := speech.NewClient(ctx)
-	if err != nil {
-		return err
-	}
 
 	g.client, err = client.StreamingRecognize(ctx)
 	if err != nil {
