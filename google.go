@@ -171,18 +171,10 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 				googleResultStream <- GoogleResult{
 					Reinitialized:     true,
 					ReinitializedInfo: fmt.Sprintf("reinitialized client after %v", reinitializationTimeout),
-				}
-
-				g.client.CloseSend()
-				
-				
-				googleResultStream <- GoogleResult{
-					Reinitialized:     false,
-					ReinitializedInfo: "reinitialized client successfully",
-				}
+				}					
 				g.Unlock()
-
 				timer.Reset(reinitializationTimeout)
+				return
 
 			default:
 				g.RLock()
