@@ -215,9 +215,13 @@ func (g *GoogleService) Close() error {
 }
 
 // ReinitializeClient reinitializes the Google client.
-func (g *GoogleService) ReinitializeClient() error {
+func (g *GoogleService) ReinitializeClient() error {	
 	ctx := context.Background()
-
+		
+	client, err := speech.NewClient(ctx)
+	if err != nil {
+		return err
+	}
 	g.client, err = client.StreamingRecognize(ctx)
 	if err != nil {
 		return err
