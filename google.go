@@ -19,8 +19,7 @@ import (
 )
 
 const (
-	sampleRate  = 8000
-	domainModel = "phone_call"
+	sampleRate  = 8000	
 	reinitializationTimeout = 4*time.Minute + 50*time.Second
 )
 
@@ -38,6 +37,7 @@ type GoogleService struct {
 	languageCode   string
 	privateKeyPath string
 	enhancedMode   bool
+	domainModel    string
 	speechContext  []string
 	client         speechpb.Speech_StreamingRecognizeClient
 
@@ -61,6 +61,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 	g := GoogleService{
 		languageCode:   languageCode,
 		privateKeyPath: privateKeyPath,
+		domainModel:	"phone_call",
 		enhancedMode:   false,
 		speechContext:  speechContext,
 	}
@@ -74,14 +75,14 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 
 	for _, v := range supportedTelephony() {
 		if v == languageCode {
-			domainModel = "telephony"
+			g.domainModel = "telephony"
 			break
 		}
 	}
 	
 	for _, v := range supportedDefault() {
 		if v == languageCode {
-			domainModel = "default"
+			g.domainModel = "default"
 			break
 		}
 	}
