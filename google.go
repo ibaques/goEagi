@@ -125,6 +125,11 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				InterimResults: true,
 				SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
+				VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
+    					SpeechStartTimeout: durationpb.New(30 * time.Second),  // espera hasta 30 seg para empezar a hablar
+    					SpeechEndTimeout:   durationpb.New(500 * time.Millisecond), // detecta fin de voz tras 0.5 seg de silencio
+				},
+			},
 			},
 		},
 	}); err != nil {
@@ -259,6 +264,10 @@ func (g *GoogleService) ReinitializeClient() error {
                                 InterimResults: true,
                                 SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
+				VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
+    					SpeechStartTimeout: durationpb.New(30 * time.Second),  // espera hasta 30 seg para empezar a hablar
+    					SpeechEndTimeout:   durationpb.New(500 * time.Millisecond), // detecta fin de voz tras 0.5 seg de silencio
+				},
 			},
 		},
 	}); err != nil {
