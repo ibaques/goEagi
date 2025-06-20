@@ -100,11 +100,6 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	voiceActivityTimeout := &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
-		SpeechStartTimeout: durationpb.New(30 * time.Second),
-		SpeechEndTimeout:   durationpb.New(500 * time.Millisecond),
-	}
-
 	sc := &speechpb.SpeechContext{Phrases: speechContext}
 
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
@@ -123,8 +118,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				},
 				InterimResults: true,
 				SingleUtterance: false,
-				EnableVoiceActivityEvents: true,
-				VoiceActivityTimeout: voiceActivityTimeout,			
+				EnableVoiceActivityEvents: true,							
 			},
 		},
 	}); err != nil {
@@ -233,11 +227,6 @@ func (g *GoogleService) ReinitializeClient() error {
 		return err
 	}
 	
-	voiceActivityTimeout := &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
-		SpeechStartTimeout: durationpb.New(30 * time.Second),
-		SpeechEndTimeout:   durationpb.New(500 * time.Millisecond),
-	}
-	
 	sc := &speechpb.SpeechContext{Phrases: g.speechContext}
 	
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
@@ -257,7 +246,6 @@ func (g *GoogleService) ReinitializeClient() error {
                                 InterimResults: true,
                                 SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
-				VoiceActivityTimeout: voiceActivityTimeout,
 			},
 		},
 	}); err != nil {
