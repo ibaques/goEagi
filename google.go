@@ -16,7 +16,7 @@ import (
 	speech "cloud.google.com/go/speech/apiv1"
 	speechpb "cloud.google.com/go/speech/apiv1/speechpb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
-	//"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 const (
@@ -100,6 +100,8 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
+
+	
 	sc := &speechpb.SpeechContext{Phrases: speechContext}
 
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
@@ -118,7 +120,11 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				},
 				InterimResults: true,
 				SingleUtterance: false,
-				EnableVoiceActivityEvents: true,							
+				EnableVoiceActivityEvents: true,
+				VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
+    					SpeechStartTimeout: durationpb.New(60 * time.Second),
+    					SpeechEndTimeout:   durationpb.New(2 * time.Second),
+        			},
 			},
 		},
 	}); err != nil {
@@ -245,6 +251,10 @@ func (g *GoogleService) ReinitializeClient() error {
                                 },
                                 InterimResults: true,
                                 SingleUtterance: false,
+				VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
+    					SpeechStartTimeout: durationpb.New(60 * time.Second),
+    					SpeechEndTimeout:   durationpb.New(2 * time.Second),
+        			},
 				EnableVoiceActivityEvents: true,
 			},
 		},
