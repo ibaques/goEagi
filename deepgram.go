@@ -3,119 +3,182 @@ package goEagi
 import (
 	"context"
 	"encoding/json"
-	"fmt"	
-	"time"
+	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
 
+// DeepgramResult contiene un resultado parcial de transcripción de Deepgram.
 type DeepgramResult struct {
-	Timestamp time.Time
-	Text      string
-	IsFinal   bool
-	Error     error
+	Timestamp float64 // timestamp en segundos dentro del audio
+	Text      string  // texto transcrito parcial
+	IsFinal   bool    // si es resultado final
 }
 
+// DeepgramService mantiene la conexión websocket con Deepgram.
 type DeepgramService struct {
-	conn         *websocket.Conn
-	url          string
-	resultStream chan DeepgramResult
-	lang         string
 	apiKey       string
-	ctx          context.Context
-	cancel       context.CancelFunc
+	language     string
+	sampleRate   int
+	encoding     string
+
+	conn         *websocket.Conn
+	writeMutex   sync.Mutex // para evitar escrituras concurrentes
+	resultChan   chan DeepgramResult
+	doneChan     chan struct{}
 }
 
-func NewDeepgramService(ctx context.Context, apiKey string, lang string) (*DeepgramService, error) {
-	ctx, cancel := context.WithCancel(ctx)
-
-	url := fmt.Sprintf("wss://api.deepgram.com/v1/listen?language=%s&encoding=linear16&sample_rate=8000", lang)
-
-	header := map[string][]string{
-		"Authorization": {fmt.Sprintf("Token %s", apiKey)},
+// NewDeepgramService crea una nueva instancia y conecta al websocket Deepgram.
+// language: código BCP-47 (ej: "es-ES")
+// sampleRate: tasa de muestreo (ej: 8000)
+// encoding: tipo de codificación (ej: "linear16")
+func NewDeepgramService(apiKey, language string, sampleRate int, encoding string) (*DeepgramService, error) {
+	dg := &DeepgramService{
+		apiKey:     apiKey,
+		language:   language,
+		sampleRate: sampleRate,
+		encoding:   encoding,
+		resultChan: make(chan DeepgramResult, 100),
+		doneChan:   make(chan struct{}),
 	}
 
-	conn, _, err := websocket.DefaultDialer.Dial(url, header)
+	err := dg.connectWebSocket()
 	if err != nil {
-		cancel()
-		return nil, fmt.Errorf("failed to connect to Deepgram: %w", err)
+		return nil, err
 	}
 
-	s := &DeepgramService{
-		conn:         conn,
-		url:          url,
-		resultStream: make(chan DeepgramResult, 100),
-		lang:         lang,
-		apiKey:       apiKey,
-		ctx:          ctx,
-		cancel:       cancel,
+	go dg.readLoop()
+
+	return dg, nil
+}
+
+// connectWebSocket abre la conexión websocket al endpoint Deepgram.
+func (d *DeepgramService) connectWebSocket() error {
+	u := url.URL{
+		Scheme: "wss",
+		Host:   "api.deepgram.com",
+		Path:   "/v1/listen",
+		RawQuery: fmt.Sprintf(
+			"language=%s&encoding=%s&sample_rate=%d&punctuate=true&interim_results=true",
+			url.QueryEscape(d.language),
+			url.QueryEscape(d.encoding),
+			d.sampleRate,
+		),
 	}
 
-	go s.listenResponses()
+	header := http.Header{}
+	header.Add("Authorization", "Token "+d.apiKey)
 
-	return s, nil
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), header)
+	if err != nil {
+		return fmt.Errorf("Deepgram websocket dial error: %w", err)
+	}
+
+	d.conn = conn
+	return nil
 }
 
-// Stream sends audio bytes to Deepgram.
-func (s *DeepgramService) Stream(data []byte) error {
-	s.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
-	return s.conn.WriteMessage(websocket.BinaryMessage, data)
-}
-
-// Close terminates the session.
-func (s *DeepgramService) Close() error {
-	s.cancel()
-	return s.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-}
-
-// Results returns a channel with Deepgram transcription results.
-func (s *DeepgramService) Results() <-chan DeepgramResult {
-	return s.resultStream
-}
-
-// listenResponses parses messages from Deepgram.
-func (s *DeepgramService) listenResponses() {
-	defer close(s.resultStream)
-
+// StartStreaming envía el audio al websocket.
+// Debe ser llamado en goroutine separada.
+func (d *DeepgramService) StartStreaming(ctx context.Context, audioStream <-chan []byte) error {
 	for {
 		select {
-		case <-s.ctx.Done():
-			return
-		default:
-			_, msg, err := s.conn.ReadMessage()
+		case <-ctx.Done():
+			d.Close()
+			return ctx.Err()
+
+		case audio, ok := <-audioStream:
+			if !ok {
+				// canal cerrado, enviamos cierre websocket
+				d.Close()
+				return nil
+			}
+
+			d.writeMutex.Lock()
+			err := d.conn.WriteMessage(websocket.BinaryMessage, audio)
+			d.writeMutex.Unlock()
 			if err != nil {
-				s.resultStream <- DeepgramResult{Error: fmt.Errorf("read error: %w", err)}
-				return
-			}
-
-			var raw map[string]interface{}
-			if err := json.Unmarshal(msg, &raw); err != nil {
-				continue
-			}
-
-			channel, ok := raw["channel"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			alts, ok := channel["alternatives"].([]interface{})
-			if !ok || len(alts) == 0 {
-				continue
-			}
-
-			alt, ok := alts[0].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			text, _ := alt["transcript"].(string)
-			isFinal := raw["is_final"] == true
-
-			s.resultStream <- DeepgramResult{
-				Timestamp: time.Now(),
-				Text:      text,
-				IsFinal:   isFinal,
+				d.Close()
+				return fmt.Errorf("Deepgram write error: %w", err)
 			}
 		}
 	}
+}
+
+// readLoop lee mensajes de texto JSON desde Deepgram y los parsea.
+func (d *DeepgramService) readLoop() {
+	defer close(d.resultChan)
+	for {
+		_, message, err := d.conn.ReadMessage()
+		if err != nil {
+			log.Printf("Deepgram read error: %v", err)
+			return
+		}
+
+		var resp deepgramResponse
+		if err := json.Unmarshal(message, &resp); err != nil {
+			log.Printf("Deepgram json unmarshal error: %v", err)
+			continue
+		}
+
+		for _, channel := range resp.Channels {
+			for _, alt := range channel.Alternatives {
+				for _, word := range alt.Words {
+					if alt.Transcript == "" {
+						continue
+					}
+					result := DeepgramResult{
+						Timestamp: word.Start,
+						Text:      alt.Transcript,
+						IsFinal:   alt.IsFinal,
+					}
+					select {
+					case d.resultChan <- result:
+					default:
+					}
+					break // solo enviar la primera palabra para evitar spam
+				}
+			}
+		}
+	}
+}
+
+// Results retorna el canal donde se reciben DeepgramResult.
+func (d *DeepgramService) Results() <-chan DeepgramResult {
+	return d.resultChan
+}
+
+// Close cierra la conexión websocket.
+func (d *DeepgramService) Close() error {
+	close(d.doneChan)
+	if d.conn != nil {
+		return d.conn.Close()
+	}
+	return nil
+}
+
+// Estructuras internas para parsear JSON Deepgram
+
+type deepgramResponse struct {
+	Channels []channel `json:"channels"`
+}
+
+type channel struct {
+	Alternatives []alternative `json:"alternatives"`
+}
+
+type alternative struct {
+	Transcript string  `json:"transcript"`
+	IsFinal    bool    `json:"is_final"`
+	Words      []word  `json:"words"`
+}
+
+type word struct {
+	Start float64 `json:"start"`
+	End   float64 `json:"end"`
+	Word  string  `json:"word"`
 }
