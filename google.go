@@ -99,13 +99,12 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		return nil, err
 	}
 
-	sc := &speechpb.SpeechContext{Phrases: speechContext}
+	voiceActivityTimeout := &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
+		SpeechStartTimeout: durationpb.New(30 * time.Second),
+		SpeechEndTimeout:   durationpb.New(500 * time.Millisecond),
+	}
 
-	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
-                EnableSpeakerDiarization: true,
-                MinSpeakerCount:          1,
-                MaxSpeakerCount:          2,
-        }
+	sc := &speechpb.SpeechContext{Phrases: speechContext}
 
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
@@ -117,7 +116,6 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 					Model:           g.domainModel,
 					UseEnhanced:     g.enhancedMode,
 					SpeechContexts:  []*speechpb.SpeechContext{sc},
-					DiarizationConfig: diarizationConfig,
 					EnableAutomaticPunctuation: true,
 					EnableWordTimeOffsets: true,
 					EnableSpokenPunctuation: wrapperspb.Bool(true),
@@ -125,11 +123,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				InterimResults: true,
 				SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
-				VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
-    					SpeechStartTimeout: durationpb.New(30 * time.Second),  // espera hasta 30 seg para empezar a hablar
-    					SpeechEndTimeout:   durationpb.New(500 * time.Millisecond), // detecta fin de voz tras 0.5 seg de silencio
-				},
-			},
+				VoiceActivityTimeout: voiceActivityTimeout,			
 			},
 		},
 	}); err != nil {
@@ -237,14 +231,13 @@ func (g *GoogleService) ReinitializeClient() error {
 	if err != nil {
 		return err
 	}
-
-	sc := &speechpb.SpeechContext{Phrases: g.speechContext}
 	
-	diarizationConfig := &speechpb.SpeakerDiarizationConfig{
-                EnableSpeakerDiarization: true,
-                MinSpeakerCount:          1,
-                MaxSpeakerCount:          2,
-        }
+	voiceActivityTimeout := &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
+		SpeechStartTimeout: durationpb.New(30 * time.Second),
+		SpeechEndTimeout:   durationpb.New(500 * time.Millisecond),
+	}
+	
+	sc := &speechpb.SpeechContext{Phrases: g.speechContext}
 	
 	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
@@ -255,8 +248,7 @@ func (g *GoogleService) ReinitializeClient() error {
                                         LanguageCode:    g.languageCode,
                                         Model:           g.domainModel,
                                         UseEnhanced:     g.enhancedMode,
-                                        SpeechContexts:  []*speechpb.SpeechContext{sc},
-                                        DiarizationConfig: diarizationConfig,
+                                        SpeechContexts:  []*speechpb.SpeechContext{sc},                                        
                                         EnableAutomaticPunctuation: true,
 					EnableWordTimeOffsets: true,
 					EnableSpokenPunctuation: wrapperspb.Bool(true),
@@ -264,10 +256,7 @@ func (g *GoogleService) ReinitializeClient() error {
                                 InterimResults: true,
                                 SingleUtterance: false,
 				EnableVoiceActivityEvents: true,
-				VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
-    					SpeechStartTimeout: durationpb.New(30 * time.Second),  // espera hasta 30 seg para empezar a hablar
-    					SpeechEndTimeout:   durationpb.New(500 * time.Millisecond), // detecta fin de voz tras 0.5 seg de silencio
-				},
+				VoiceActivityTimeout: voiceActivityTimeout,
 			},
 		},
 	}); err != nil {
