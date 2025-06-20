@@ -12,16 +12,14 @@ import (
 
 	speech "cloud.google.com/go/speech/apiv2"
 	speechpb "cloud.google.com/go/speech/apiv2/speechpb"
-	durationpb "google.golang.org/protobuf/types/known/durationpb"
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
-	sampleRate              = 8000
+	sampleRate             = 8000
 	reinitializationTimeout = 4*time.Minute + 50*time.Second
 )
 
-// GoogleResult contiene el resultado de la transcripción o error.
 type GoogleResult struct {
 	Result            *speechpb.StreamingRecognizeResponse
 	Error             error
@@ -30,7 +28,6 @@ type GoogleResult struct {
 	ReinitializedInfo string
 }
 
-// GoogleService gestiona el streaming a Google Speech-to-Text.
 type GoogleService struct {
 	languageCode   string
 	privateKeyPath string
@@ -42,23 +39,31 @@ type GoogleService struct {
 	sync.RWMutex
 }
 
-// NewGoogleService crea el cliente para Google Speech-to-Text v2.
 func NewGoogleService(privateKeyPath string, languageCode string, speechContext []string) (*GoogleService, error) {
-	if len(strings.TrimSpace(privateKeyPath)) == 0 {
+	if strings.TrimSpace(privateKeyPath) == "" {
 		return nil, errors.New("private key path is empty")
 	}
-
-	err := os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", privateKeyPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to set Google credential's env: %v", err)
+	if err := os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", privateKeyPath); err != nil {
+		return nil, fmt.Errorf("failed to set GOOGLE_APPLICATION_CREDENTIALS: %v", err)
 	}
 
-	g := GoogleService{
+	ctx := context.Background()
+	client, err := speech.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	streamingClient, err := client.StreamingRecognize(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	g := &GoogleService{
 		languageCode:   languageCode,
 		privateKeyPath: privateKeyPath,
 		domainModel:    "phone_call",
 		enhancedMode:   false,
 		speechContext:  speechContext,
+		client:        streamingClient,
 	}
 
 	for _, v := range supportedEnhancedMode() {
@@ -67,14 +72,12 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 			break
 		}
 	}
-
 	for _, v := range supportedTelephony() {
 		if v == languageCode {
 			g.domainModel = "telephony"
 			break
 		}
 	}
-
 	for _, v := range supportedDefault() {
 		if v == languageCode {
 			g.domainModel = "default"
@@ -82,116 +85,85 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 		}
 	}
 
-	ctx := context.Background()
-
-	client, err := speech.NewClient(ctx)
-	if err != nil {
-		return nil, err
+	phraseSet := &speechpb.PhraseSet{
+		Phrases: make([]*speechpb.Phrase, len(speechContext)),
+	}
+	for i, phrase := range speechContext {
+		phraseSet.Phrases[i] = &speechpb.Phrase{Value: phrase}
 	}
 
-	g.client, err = client.StreamingRecognize(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Construir PhraseSet para Adaptation
-	phraseSet := &speechpb.SpeechAdaptation_AdaptationPhraseSet{
-		PhraseSetId: "custom_phrases",
-		PhraseSet: &speechpb.PhraseSet{
-			Phrases: make([]*speechpb.PhraseSet_Phrase, len(g.speechContext)),
-		},
-	}
-	for i, phrase := range g.speechContext {
-		phraseSet.PhraseSet.Phrases[i] = &speechpb.PhraseSet_Phrase{Value: phrase}
-	}
-
-	config := &speechpb.RecognitionConfig{
-		Encoding:                   speechpb.AudioEncoding_LINEAR16,
-		SampleRateHertz:            sampleRate,
-		LanguageCode:               g.languageCode,
-		Model:                     g.domainModel,
-		UseEnhanced:               g.enhancedMode,
-		EnableAutomaticPunctuation: true,
-		EnableWordTimeOffsets:      true,
-		EnableSpokenPunctuation:    wrapperspb.Bool(true),
-		Adaptation: &speechpb.SpeechAdaptation{
-			PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{phraseSet},
-		},
-		// Diarization removido según pedido
-	}
-
-	streamingConfig := &speechpb.StreamingRecognitionConfig{
-		Config:                  config,
-		InterimResults:          true,
-		SingleUtterance:         false,
-		EnableVoiceActivityEvents: true,
-		VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
-			SpeechStartTimeout: durationpb.New(30 * time.Second),       // Espera max 30 seg para que inicie voz
-			SpeechEndTimeout:   durationpb.New(500 * time.Millisecond),  // Detecta fin voz con 0.5s de silencio
-		},
-	}
-
-	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
+	err = g.client.Send(&speechpb.StreamingRecognizeRequest{
 		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
-			StreamingConfig: streamingConfig,
+			StreamingConfig: &speechpb.StreamingRecognitionConfig{
+				Config: &speechpb.RecognitionConfig{
+					Encoding:        speechpb.AudioEncoding_LINEAR16,
+					SampleRateHertz: sampleRate,
+					LanguageCode:    g.languageCode,
+					Model:           g.domainModel,
+					UseEnhanced:     g.enhancedMode,
+					EnableAutomaticPunctuation: true,
+					EnableWordTimeOffsets:      true,
+					EnableSpokenPunctuation:    wrapperspb.Bool(true),
+					SpeechAdaptation: &speechpb.SpeechAdaptation{
+						PhraseSets: []*speechpb.PhraseSet{phraseSet},
+					},
+				},
+				InterimResults:            true,
+				SingleUtterance:           false,
+				EnableVoiceActivityEvents: true,
+			},
 		},
-	}); err != nil {
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	return &g, nil
+	return g, nil
 }
 
-// StartStreaming envía audio al streaming de Google.
 func (g *GoogleService) StartStreaming(ctx context.Context, stream <-chan []byte) <-chan error {
-	startStream := make(chan error)
-
+	errCh := make(chan error)
 	go func() {
-		defer close(startStream)
-
+		defer close(errCh)
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case s := <-stream:
+			case data, ok := <-stream:
+				if !ok {
+					return
+				}
 				g.RLock()
 				err := g.client.Send(&speechpb.StreamingRecognizeRequest{
 					StreamingRequest: &speechpb.StreamingRecognizeRequest_AudioContent{
-						AudioContent: s,
+						AudioContent: data,
 					},
 				})
 				g.RUnlock()
 				if err != nil {
-					startStream <- fmt.Errorf("streaming error: %v", err)
+					errCh <- fmt.Errorf("streaming send error: %w", err)
 					return
 				}
 			}
 		}
 	}()
-
-	return startStream
+	return errCh
 }
 
-// SpeechToTextResponse recibe las respuestas de transcripción.
 func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleResult {
-	googleResultStream := make(chan GoogleResult)
-
+	results := make(chan GoogleResult)
 	go func() {
-		defer close(googleResultStream)
-
+		defer close(results)
 		timer := time.NewTimer(reinitializationTimeout)
-
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			case <-timer.C:
-				g.Lock()
-				googleResultStream <- GoogleResult{
+				results <- GoogleResult{
 					Reinitialized:     true,
 					ReinitializedInfo: fmt.Sprintf("reinitialized client after %v", reinitializationTimeout),
 				}
-				g.Unlock()
 				timer.Reset(reinitializationTimeout)
 				return
 			default:
@@ -200,101 +172,33 @@ func (g *GoogleService) SpeechToTextResponse(ctx context.Context) <-chan GoogleR
 				g.RUnlock()
 
 				if err == io.EOF {
-					googleResultStream <- GoogleResult{Error: io.EOF}
+					results <- GoogleResult{Error: io.EOF}
 					return
 				}
-
 				if err != nil {
-					googleResultStream <- GoogleResult{Error: err}
+					results <- GoogleResult{Error: err}
 					return
 				}
 
-				googleResultStream <- GoogleResult{Result: resp}
+				results <- GoogleResult{Result: resp}
 			}
 		}
 	}()
-
-	return googleResultStream
+	return results
 }
 
-// Close cierra la conexión con el cliente Google.
 func (g *GoogleService) Close() error {
 	g.Lock()
 	defer g.Unlock()
 	return g.client.CloseSend()
 }
 
-// ReinitializeClient reinicia el cliente de Google.
-func (g *GoogleService) ReinitializeClient() error {
-	ctx := context.Background()
-
-	client, err := speech.NewClient(ctx)
-	if err != nil {
-		return err
-	}
-
-	g.client, err = client.StreamingRecognize(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Reconstruir PhraseSet para Adaptation
-	phraseSet := &speechpb.SpeechAdaptation_AdaptationPhraseSet{
-		PhraseSetId: "custom_phrases",
-		PhraseSet: &speechpb.PhraseSet{
-			Phrases: make([]*speechpb.PhraseSet_Phrase, len(g.speechContext)),
-		},
-	}
-	for i, phrase := range g.speechContext {
-		phraseSet.PhraseSet.Phrases[i] = &speechpb.PhraseSet_Phrase{Value: phrase}
-	}
-
-	config := &speechpb.RecognitionConfig{
-		Encoding:                   speechpb.AudioEncoding_LINEAR16,
-		SampleRateHertz:            sampleRate,
-		LanguageCode:               g.languageCode,
-		Model:                     g.domainModel,
-		UseEnhanced:               g.enhancedMode,
-		EnableAutomaticPunctuation: true,
-		EnableWordTimeOffsets:      true,
-		EnableSpokenPunctuation:    wrapperspb.Bool(true),
-		Adaptation: &speechpb.SpeechAdaptation{
-			PhraseSets: []*speechpb.SpeechAdaptation_AdaptationPhraseSet{phraseSet},
-		},
-	}
-
-	streamingConfig := &speechpb.StreamingRecognitionConfig{
-		Config:                  config,
-		InterimResults:          true,
-		SingleUtterance:         false,
-		EnableVoiceActivityEvents: true,
-		VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
-			SpeechStartTimeout: durationpb.New(30 * time.Second),
-			SpeechEndTimeout:   durationpb.New(500 * time.Millisecond),
-		},
-	}
-
-	if err := g.client.Send(&speechpb.StreamingRecognizeRequest{
-		StreamingRequest: &speechpb.StreamingRecognizeRequest_StreamingConfig{
-			StreamingConfig: streamingConfig,
-		},
-	}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Listas de idiomas soportados
-
 func supportedEnhancedMode() []string {
 	return []string{"es-US", "en-GB", "en-US", "fr-FR", "ja-JP", "pt-BR", "ru-RU", "es-ES"}
 }
-
 func supportedTelephony() []string {
 	return []string{"pt-PT", "nl-NL"}
 }
-
 func supportedDefault() []string {
 	return []string{"ca-ES", "da-DK"}
 }
