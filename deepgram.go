@@ -3,8 +3,7 @@ package goEagi
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"log"
+	"fmt"	
 	"time"
 
 	"github.com/gorilla/websocket"
