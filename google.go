@@ -123,7 +123,7 @@ func NewGoogleService(privateKeyPath string, languageCode string, speechContext 
 				EnableVoiceActivityEvents: true,
 				VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
     					SpeechStartTimeout: durationpb.New(60 * time.Second),
-    					SpeechEndTimeout:   durationpb.New(2 * time.Second),
+    					SpeechEndTimeout:   durationpb.New(10 * time.Second),
         			},
 			},
 		},
@@ -253,7 +253,7 @@ func (g *GoogleService) ReinitializeClient() error {
                                 SingleUtterance: false,
 				VoiceActivityTimeout: &speechpb.StreamingRecognitionConfig_VoiceActivityTimeout{
     					SpeechStartTimeout: durationpb.New(60 * time.Second),
-    					SpeechEndTimeout:   durationpb.New(2 * time.Second),
+    					SpeechEndTimeout:   durationpb.New(10 * time.Second),
         			},
 				EnableVoiceActivityEvents: true,
 			},
